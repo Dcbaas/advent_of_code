@@ -8,6 +8,7 @@ namespace ch2 {
 	struct TravelData {
 		int horizontal;
 		int depth;
+		int aim;
 	};
 
 	enum class Direction : char {
@@ -17,6 +18,8 @@ namespace ch2 {
 	};
 
 	TravelData record_travel_data(std::string& file_path);
+
+	TravelData record_travel_data_with_aim(std::string& file_path);
 
 	std::tuple<Direction, int> parse_line(std::string& line);
 

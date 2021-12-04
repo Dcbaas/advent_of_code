@@ -38,6 +38,38 @@ namespace ch2 {
 		return travel_data;
 	}
 
+	TravelData record_travel_data_with_aim(std::string& file_path) {
+		std::ifstream file(file_path);
+		if (!file.good()) {
+			std::cerr << "File open failed: " << file.bad() << std::endl;
+			throw std::runtime_error("File failed to open: " + file_path);
+		}
+
+		TravelData travel_data{ 0,0 };
+
+		std::string buffer;
+		while (!file.eof()) {
+			std::getline(file, buffer);
+			auto [direction, distance] = parse_line(buffer);
+			switch (direction) {
+			case Direction::forward:
+				travel_data.horizontal += distance;
+				travel_data.depth += distance * travel_data.aim;
+				break;
+			case Direction::down:
+				travel_data.aim += distance;
+				break;
+			case Direction::up:
+				travel_data.aim -= distance;
+				break;
+			default:
+				throw std::runtime_error("Unknown Direction");
+			}
+		}
+
+		return travel_data;
+	}
+
 	std::tuple<Direction, int> parse_line(std::string& line) {
 		constexpr char delimiter = ' ';
 		int distance;
