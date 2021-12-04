@@ -11,7 +11,12 @@ int main(int argc, char** argv) {
 
 	std::string file_path{ argv[1] };
 
-	auto total_increases{ ch1::count_depth_increases(file_path) };
+	// Pt 1
+	//auto total_increases{ ch1::count_depth_increases(file_path) };
+
+	// Pt 2
+	auto total_increases{ ch1::count_depth_window_increases(file_path) };
+
 
 	std::cout << "Depth increased a total of " << total_increases << " times." << "\n";
 
