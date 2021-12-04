@@ -1,6 +1,7 @@
 #include "dive.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -9,6 +10,7 @@ namespace ch2 {
 	TravelData record_travel_data(std::string& file_path) {
 		std::ifstream file(file_path);
 		if (!file.good()) {
+			std::cerr << "File open failed: " << file.bad() << std::endl;
 			throw std::runtime_error("File failed to open: " + file_path);
 		}
 
