@@ -14,13 +14,26 @@ namespace ch2 {
 
 		TravelData travel_data{ 0,0 };
 
-
+		std::string buffer;
 		while (!file.eof()) {
-
+			std::getline(file, buffer);
+			auto [direction, distance] = parse_line(buffer);
+			switch (direction) {
+			case Direction::forward:
+				travel_data.horizontal += distance;
+				break;
+			case Direction::down:
+				travel_data.depth += distance;
+				break;
+			case Direction::up:
+				travel_data.depth -= distance;
+				break;
+			default:
+				throw std::runtime_error("Unknown Direction");
+			}
 		}
 
-
-		return TravelData{ 0,0 };
+		return travel_data;
 	}
 
 	std::tuple<Direction, int> parse_line(std::string& line) {
@@ -37,6 +50,6 @@ namespace ch2 {
 	}
 
 	int calculate_travel_scaler(TravelData& travel_data) {
-		return 0;
+		return travel_data.horizontal * travel_data.depth;
 	}
 }

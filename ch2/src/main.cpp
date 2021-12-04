@@ -3,11 +3,16 @@
 #include <iostream>
 
 int main(int argc, char** argv) {
-	std::cout << "Hello World" << "\n";
+	if (argc < 2) {
+		std::cout << "Error: no input file specified" << "\n\n";
+		std::cout << "Usage:" << '\n' << "ch2.exe <input file path>" << '\n';
+	}
 
-	std::string up_line{ "up 6" };
+	std::string file_path{ argv[1] };
 
-	std::tuple<ch2::Direction, int> line_data{ ch2::parse_line(up_line) };
+	ch2::TravelData travel_data{ ch2::record_travel_data(file_path) };
+	int travel_scalar{ ch2::calculate_travel_scaler(travel_data) };
 
+	std::cout << "Travel Scalar: " << travel_scalar << '\n';
 	return 0;
 }

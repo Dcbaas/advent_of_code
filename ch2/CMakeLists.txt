@@ -17,3 +17,6 @@ target_include_directories(
 	PRIVATE
 	${PROJECT_SOURCE_DIR}/include
 )
+
+configure_file(${PROJECT_SOURCE_DIR}/input/sample_travel_data.txt input/sample_travel_data.txt COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/input/travel_data.txt input/travel_data.txt COPYONLY)

@@ -7,7 +7,7 @@
 namespace ch2 {
 	struct TravelData {
 		int horizontal;
-		int vertical;
+		int depth;
 	};
 
 	enum class Direction : char {
