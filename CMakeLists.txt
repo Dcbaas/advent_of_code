@@ -10,3 +10,4 @@ project ("advent_of_code")
 # Include sub-projects.
 add_subdirectory(common)
 add_subdirectory(ch1)
+add_subdirectory(ch2)
