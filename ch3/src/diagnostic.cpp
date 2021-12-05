@@ -16,7 +16,7 @@ namespace ch3 {
 			throw std::runtime_error("File Failure");
 		}
 
-		std::vector<PositonInfo> positions;
+		std::vector<PositonInfo> positions{};
 
 		std::string buffer;
 		while (!file.eof()) {
@@ -49,14 +49,14 @@ namespace ch3 {
 	}
 
 	std::bitset<64> calculate_gamma_rate_bit_set(std::span<PositonInfo> positions) {
-		std::vector<char> bit_str(positions.size());
+		std::vector<char> bit_str;
 
 		for (const auto& position : positions) {
 			bit_str.push_back(position.ones < position.zeros ? '0' : '1');
 		}
 
-
-		return std::bitset<64>(bit_str.data());
+		auto gamma_rate = std::bitset<64>(bit_str.data());
+		return gamma_rate;
 	}
 
 	// Does this destroy the gamma rate? even if its pass by value? 
