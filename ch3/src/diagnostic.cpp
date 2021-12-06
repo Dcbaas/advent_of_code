@@ -1,5 +1,6 @@
 #include "diagnostic.hpp"
 
+#include <boost/dynamic_bitset.hpp>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -48,31 +49,27 @@ namespace ch3 {
 		return positions;
 	}
 
-	std::bitset<64> calculate_gamma_rate_bit_set(std::span<PositonInfo> positions) {
-		std::vector<char> bit_str;
+	int get_power_consumption(std::span<PositonInfo> positions) {
+		std::string test_str{ "10110" };
+		boost::dynamic_bitset<unsigned int> test1(test_str);
 
-		for (const auto& position : positions) {
-			bit_str.push_back(position.ones < position.zeros ? '0' : '1');
+		std::string buffer{ "" };
+		for (const auto& position_info : positions) {
+			if (position_info.ones > position_info.zeros) {
+				buffer.append("1");
+			}
+			else {
+				buffer.append("0");
+			}
 		}
+		boost::dynamic_bitset<unsigned int> gamma_rate_bit(buffer);
+		int gamma_rate = static_cast<int>(gamma_rate_bit.to_ulong());
+		std::cout << "Gamma Rate: " << gamma_rate << '\n';
 
-		auto gamma_rate = std::bitset<64>(bit_str.data());
-		return gamma_rate;
+		boost::dynamic_bitset<unsigned int> epsilon_rate_bit = gamma_rate_bit.flip();
+		int epsilon_rate = static_cast<int>(epsilon_rate_bit.to_ulong());
+		std::cout << "Epsilon Rate: " << epsilon_rate << '\n';
+
+		return gamma_rate * epsilon_rate;
 	}
-
-	// Does this destroy the gamma rate? even if its pass by value? 
-	std::bitset<64> calculate_epsilon_rate_bit_set(std::bitset<64> gamma_rate) {
-
-		return gamma_rate.flip();
-	}
-
-	unsigned long get_power_consumption(const std::bitset<64>& gamma_rate, const std::bitset<64>& epsilon_rate) {
-		return gamma_rate.to_ulong() * epsilon_rate.to_ulong();
-	}
-
-	void print_span(std::span<PositonInfo> my_span) {
-		for (const auto& position : my_span) {
-			std::cout << "Position: " << position.position << '\n';
-		}
-	}
-
 }

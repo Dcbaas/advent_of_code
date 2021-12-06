@@ -19,8 +19,11 @@ target_include_directories(
 	${PROJECT_SOURCE_DIR}/include
 )
 
+find_package(Boost REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
 	advent::common
+	Boost::boost
 )
 
 configure_file(${PROJECT_SOURCE_DIR}/input/sample_diagnostic.txt input/sample_diagnostic.txt COPYONLY)
