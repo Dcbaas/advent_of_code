@@ -2,9 +2,10 @@
 
 #include <boost/dynamic_bitset.hpp>
 #include <fstream>
+#include <format>
 #include <iostream>
 #include <iterator>
-//#include <ranges>
+#include <ranges>
 #include <vector>
 #include <span>
 
@@ -119,51 +120,63 @@ namespace ch3 {
 		return gamma_rate * epsilon_rate;
 	}
 
-	int get_02_rating(DiagnosticData& diagnostic_data) {
-		std::span<PositonInfo> position_stats{ diagnostic_data.position_stats };
-		auto most_common_bits = find_most_common_bits(position_stats);
-
-		//auto result = static_cast<bool>(most_common_bits[0]);
-
-		namespace ranges = std::ranges;
-		std::vector<const std::string> working_results(diagnostic_data.diagnostic_lines);
-		for (auto i = 0; i < most_common_bits.size(); ++i) {
-			bool bit = static_cast<bool>(most_common_bits[i]);
-			char bit_c = bit ? '1' : '0';
-			auto matches_most_common_bit = [i, bit_c](std::string line) { return line[i] == bit_c; };
-		
-		}
-		return 0;
-	}
-
 	int get_life_support_rating(DiagnosticData& diagnostic_data) {
 		// Save on namespace
 		namespace ranges = std::ranges;
 
 		std::span<PositonInfo> position_stats{ diagnostic_data.position_stats };
+		// CAN'T USE A BIT SET MADE AHEAD OF TIME. HAVE TO CALCULATE FOR EACH ITERATION
 		auto most_common_bits = find_most_common_bits(position_stats);
 
 		//auto result = static_cast<bool>(most_common_bits[0]);
 
-		std::vector<const std::string> o2_results(diagnostic_data.diagnostic_lines.size());
-		std::vector<const std::string> co2_results(diagnostic_data.diagnostic_lines.size());
+		std::vector<std::string> o2_results(diagnostic_data.diagnostic_lines);
+		std::vector<std::string> co2_results(diagnostic_data.diagnostic_lines);
 		for (auto i = 0; i < most_common_bits.size(); ++i) {
 			bool bit = static_cast<bool>(most_common_bits[i]);
 			char bit_c = bit ? '1' : '0';
-			auto matches_most_common_bit = [i, bit_c](std::string line) { return line[i] == bit_c; };
-			auto matches_least_common_bit = [i, bit_c](std::string line) { return line[i] != bit_c; };
-	
-			//if (o2_results.empty() && co2_results.empty()) {
-			//	auto begin = diagnostic_data.diagnostic_lines.begin();
-			//	auto end = diagnostic_data.diagnostic_lines.end();
-			//	ranges::copy_if(begin, end, std::back_inserter(o2_results), matches_most_common_bit);
-			//	ranges::copy_if(begin, end, std::back_inserter(co2_results), matches_most_common_bit);
-			//}
-			//else {
-			//	ranges::copy_if(o2_results, std::back_inserter(o2_results), matches_most_common_bit);
-			//	ranges::copy_if(co2_results, std::back_inserter(co2_results), matches_most_common_bit);
+			//auto matches_most_common_bit = [i, bit_c](const std::string line) { return line[i] == bit_c; };
+			//auto matches_least_common_bit = [i, bit_c](const std::string line) { return line[i] != bit_c; };
+
+			if (o2_results.size() <= 1) {
+				break;
+			}
+
+			if (o2_results.size() > 1) {
+				auto matches_most_common_bit = [i, bit_c](const std::string line) { return line[i] == bit_c; };
+				std::span<std::string> o2_span(o2_results);
+
+				o2_results = filter_lines(o2_span, matches_most_common_bit);
+			}
+
+			//if (co2_results.size() > 1) {
+			//	auto matches_least_common_bit = [i, bit_c](const std::string line) { return line[i] != bit_c; };
+			//	std::span<std::string> co2_span(co2_results);
+			//	co2_results = filter_lines(co2_span, matches_least_common_bit);
 			//}
 		}
+
+		if (o2_results.empty()) {
+			std::cerr << "One of the results list was empty" << '\n';
+			throw std::runtime_error(std::format("O2 Size: {}, CO2 Size: {}", o2_results.size(), co2_results.size()));
+		}
+
+		std::cout << std::format("O2 Result: {}", o2_results[0]) << '\n';
 		return 0;
+	}
+
+	int get_life_support_rating(std::string file_path) {
+		DiagnosticData data = read_and_return_diagnostic_data(file_path);
+		return get_life_support_rating(data);
+	}
+
+	std::vector<std::string> filter_lines(std::span<std::string> diagnostic_lines, std::function<bool(const std::string)> predicate) {
+		std::vector<std::string> filtered_results;
+
+		for (auto& line : diagnostic_lines | std::views::filter(predicate)) {
+			filtered_results.push_back(line);
+		}
+
+		return filtered_results;
 	}
 }
