@@ -14,7 +14,6 @@ int main(int argc, char** argv) {
 	//}
 
 	//std::string file_path{ argv[1] };
-	std::string file_path{ "C:\\SPE\\projects\\advent_of_code\\ch3\\input\\sample_diagnostic.txt" };
 
 	auto p1Execution = [&file_path]() {
 		std::vector<ch3::PositonInfo> positions = ch3::read_diagnostic_data(file_path);
@@ -32,7 +31,7 @@ int main(int argc, char** argv) {
 
 
 	std::cout << "Part1. Power Consumption: " << result << " Duration: " << duration << '\n';
-	std::cout << "Part2. Power Consumption: " << result2 << " Duration: " << duration2 << '\n';
+	std::cout << "Part2. Life Support Rating: " << result2 << " Duration: " << duration2 << '\n';
 
 	return 0;
 }

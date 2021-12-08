@@ -5,6 +5,7 @@
 #include <format>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <ranges>
 #include <vector>
 #include <span>
@@ -94,20 +95,6 @@ namespace ch3 {
 		return data;
 	}
 
-	boost::dynamic_bitset<block_t> find_most_common_bits(std::span<PositonInfo> positions) {
-		std::string buffer{ "" };
-		for (const auto& position_info : positions) {
-			if (position_info.ones > position_info.zeros) {
-				buffer.append("1");
-			}
-			else {
-				buffer.append("0");
-			}
-		}
-
-		return boost::dynamic_bitset<block_t>(buffer);
-	}
-
 	int get_power_consumption(std::span<PositonInfo> positions) {
 		auto gamma_rate_bit = find_most_common_bits(positions);
 		int gamma_rate = static_cast<int>(gamma_rate_bit.to_ulong());
@@ -121,48 +108,42 @@ namespace ch3 {
 	}
 
 	int get_life_support_rating(DiagnosticData& diagnostic_data) {
-		// Save on namespace
-		namespace ranges = std::ranges;
+		const size_t bit_length = diagnostic_data.position_stats.size();
 
-		std::span<PositonInfo> position_stats{ diagnostic_data.position_stats };
-		// CAN'T USE A BIT SET MADE AHEAD OF TIME. HAVE TO CALCULATE FOR EACH ITERATION
-		auto most_common_bits = find_most_common_bits(position_stats);
-
-		//auto result = static_cast<bool>(most_common_bits[0]);
-
-		std::vector<std::string> o2_results(diagnostic_data.diagnostic_lines);
-		std::vector<std::string> co2_results(diagnostic_data.diagnostic_lines);
-		for (auto i = 0; i < most_common_bits.size(); ++i) {
-			bool bit = static_cast<bool>(most_common_bits[i]);
-			char bit_c = bit ? '1' : '0';
-			//auto matches_most_common_bit = [i, bit_c](const std::string line) { return line[i] == bit_c; };
-			//auto matches_least_common_bit = [i, bit_c](const std::string line) { return line[i] != bit_c; };
-
-			if (o2_results.size() <= 1) {
+		auto o2_results = std::make_unique<DiagnosticData>(diagnostic_data);
+		auto co2_results = std::make_unique<DiagnosticData>(diagnostic_data);
+		for (auto i = 0; i < bit_length; ++i) {
+			if (o2_results->diagnostic_lines.size() <= 1 && co2_results->diagnostic_lines.size() <=1) {
 				break;
 			}
 
-			if (o2_results.size() > 1) {
+			if (o2_results->diagnostic_lines.size() > 1) {
+				char bit_c = most_common_bit(o2_results->position_stats[i], '1');
 				auto matches_most_common_bit = [i, bit_c](const std::string line) { return line[i] == bit_c; };
-				std::span<std::string> o2_span(o2_results);
+				std::span<std::string> o2_span(o2_results->diagnostic_lines);
 
 				o2_results = filter_lines(o2_span, matches_most_common_bit);
 			}
 
-			//if (co2_results.size() > 1) {
-			//	auto matches_least_common_bit = [i, bit_c](const std::string line) { return line[i] != bit_c; };
-			//	std::span<std::string> co2_span(co2_results);
-			//	co2_results = filter_lines(co2_span, matches_least_common_bit);
-			//}
+			if (co2_results->diagnostic_lines.size() > 1) {
+				char bit_c = least_common_bit(o2_results->position_stats[i], '0');
+				auto matches_least_common_bit = [i, bit_c](const std::string line) { return line[i] == bit_c; };
+				std::span<std::string> co2_span(co2_results->diagnostic_lines);
+				co2_results = filter_lines(co2_span, matches_least_common_bit);
+			}
 		}
 
-		if (o2_results.empty()) {
-			std::cerr << "One of the results list was empty" << '\n';
-			throw std::runtime_error(std::format("O2 Size: {}, CO2 Size: {}", o2_results.size(), co2_results.size()));
+		if (o2_results->diagnostic_lines.empty() || co2_results->diagnostic_lines.empty()) {
+			std::string error_text = std::format("O2 Size: {}, CO2 Size: {}", o2_results->diagnostic_lines.size(), co2_results->diagnostic_lines.size());
+			std::cerr << "One of the results list was empty" << error_text << '\n';
+			throw std::runtime_error(error_text);
 		}
+		const std::string o2_bit_str{ o2_results->diagnostic_lines[0] };
+		const std::string co2_bit_str{ co2_results->diagnostic_lines[0] };
 
-		std::cout << std::format("O2 Result: {}", o2_results[0]) << '\n';
-		return 0;
+		std::cout << std::format("O2 Result: {}", o2_bit_str) << '\n';
+		std::cout << std::format("CO2 Results: {}", co2_bit_str) << '\n';
+		return convert_bit_str_to_int(o2_bit_str) * convert_bit_str_to_int(co2_bit_str);
 	}
 
 	int get_life_support_rating(std::string file_path) {
@@ -170,13 +151,30 @@ namespace ch3 {
 		return get_life_support_rating(data);
 	}
 
-	std::vector<std::string> filter_lines(std::span<std::string> diagnostic_lines, std::function<bool(const std::string)> predicate) {
-		std::vector<std::string> filtered_results;
+	std::unique_ptr<DiagnosticData> filter_lines(std::span<std::string> diagnostic_lines, std::function<bool(const std::string)> predicate) {
+		auto filtered_data = std::make_unique<DiagnosticData>(DiagnosticData{});
 
 		for (auto& line : diagnostic_lines | std::views::filter(predicate)) {
-			filtered_results.push_back(line);
+
+			for (size_t i = 0; i < line.length(); ++i) {
+				char bit = line[i];
+				if (filtered_data->position_stats.size() != line.length()) {
+					filtered_data->position_stats.push_back(PositonInfo{ i, 0, 0 });
+				}
+
+				if (bit == '0') {
+					filtered_data->position_stats[i].zeros++;
+				}
+				else if (bit == '1') {
+					filtered_data->position_stats[i].ones++;
+				}
+				else {
+					throw std::runtime_error("Unexpected bit: " + bit);
+				}
+			}
+			filtered_data->diagnostic_lines.push_back(line);
 		}
 
-		return filtered_results;
+		return filtered_data;
 	}
 }
