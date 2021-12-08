@@ -7,13 +7,13 @@
 #include <vector>
 
 int main(int argc, char** argv) {
-	//if (argc < 2) {
-	//	std::cout << "Error: no input file specified" << "\n\n";
-	//	std::cout << "Usage:" << '\n' << "ch3.exe <input file path>" << '\n';
-	//	return 1;
-	//}
+	if (argc < 2) {
+		std::cout << "Error: no input file specified" << "\n\n";
+		std::cout << "Usage:" << '\n' << "ch3.exe <input file path>" << '\n';
+		return 1;
+	}
 
-	//std::string file_path{ argv[1] };
+	std::string file_path{ argv[1] };
 
 	auto p1Execution = [&file_path]() {
 		std::vector<ch3::PositonInfo> positions = ch3::read_diagnostic_data(file_path);

@@ -126,7 +126,7 @@ namespace ch3 {
 			}
 
 			if (co2_results->diagnostic_lines.size() > 1) {
-				char bit_c = least_common_bit(o2_results->position_stats[i], '0');
+				char bit_c = least_common_bit(co2_results->position_stats[i], '0');
 				auto matches_least_common_bit = [i, bit_c](const std::string line) { return line[i] == bit_c; };
 				std::span<std::string> co2_span(co2_results->diagnostic_lines);
 				co2_results = filter_lines(co2_span, matches_least_common_bit);
